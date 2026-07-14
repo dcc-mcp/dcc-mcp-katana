@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.1.0...v0.2.0) (2026-07-14)
+
+
+### Features
+
+* add Katana MCP adapter ([eb633db](https://github.com/dcc-mcp/dcc-mcp-katana/commit/eb633dbb93ac94bfccb045b20591e3388e2593b2))
+
+
+### Bug Fixes
+
+* parse release manifest in version test ([02934c3](https://github.com/dcc-mcp/dcc-mcp-katana/commit/02934c3d92eb7beda116132b94d20f93c7c5e968))
+* use valid CI expression syntax ([4b15be5](https://github.com/dcc-mcp/dcc-mcp-katana/commit/4b15be5ad17743d06e38fdc5923240c700820afb))
+
 ## [0.1.0] - 2026-07-14
 
 ### Added
