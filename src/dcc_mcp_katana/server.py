@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -12,7 +11,7 @@ from dcc_mcp_core.server_base import DccServerBase
 from .__version__ import __version__
 from .dispatcher import KatanaDispatcher
 
-DEFAULT_PORT = 8765
+DEFAULT_PORT = 0
 SERVER_NAME = "dcc-mcp-katana"
 _dispatcher = KatanaDispatcher()
 _server: Optional["KatanaMcpServer"] = None
@@ -21,7 +20,7 @@ _server: Optional["KatanaMcpServer"] = None
 class KatanaMcpServer(DccServerBase):
     """MCP server hosted by a running Katana session."""
 
-    def __init__(self, port: int = DEFAULT_PORT) -> None:
+    def __init__(self, port: Optional[int] = None) -> None:
         options = DccServerOptions.from_env(
             "katana",
             Path(__file__).resolve().parent / "skills",
@@ -47,7 +46,7 @@ def start_server(port: Optional[int] = None) -> KatanaMcpServer:
     if _server is not None and _server.is_running:
         return _server
     _dispatcher.install()
-    _server = KatanaMcpServer(port or int(os.environ.get("DCC_MCP_KATANA_PORT", DEFAULT_PORT)))
+    _server = KatanaMcpServer(port)
     _server.register_builtin_actions()
     _server.start()
     return _server
