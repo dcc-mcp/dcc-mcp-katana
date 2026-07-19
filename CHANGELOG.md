@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.3.0...v0.3.1) (2026-07-19)
+
+
+### Documentation
+
+* align agent workflow and branding ([738c846](https://github.com/dcc-mcp/dcc-mcp-katana/commit/738c846d3ecc63b892f0d837cef4f088c3ab65cb))
+* document CLI install and updates ([84ff8bd](https://github.com/dcc-mcp/dcc-mcp-katana/commit/84ff8bd6cb4d1c21dbc548e8acba68bc64409923))
+
 ## [0.3.0](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.2.0...v0.3.0) (2026-07-16)
 
 
