@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.3.0...v0.4.0) (2026-08-12)
+
+
+### Features
+
+* ship production-ready Katana nodegraph workflows ([#6](https://github.com/dcc-mcp/dcc-mcp-katana/issues/6)) ([a63e956](https://github.com/dcc-mcp/dcc-mcp-katana/commit/a63e956315113c6ad4a3d184a1c06cdfd5bab92d))
+
+
+### Documentation
+
+* align agent workflow and branding ([738c846](https://github.com/dcc-mcp/dcc-mcp-katana/commit/738c846d3ecc63b892f0d837cef4f088c3ab65cb))
+* document CLI install and updates ([84ff8bd](https://github.com/dcc-mcp/dcc-mcp-katana/commit/84ff8bd6cb4d1c21dbc548e8acba68bc64409923))
+
 ## [Unreleased]
 
 ### Features
