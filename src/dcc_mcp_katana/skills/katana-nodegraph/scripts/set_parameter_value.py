@@ -1,14 +1,14 @@
-"""List nodes in the active Katana node graph."""
+"""Set one bounded scalar Katana node parameter."""
 
 from dcc_mcp_core.skill import skill_entry
 
-from dcc_mcp_katana.operations import list_nodes
+from dcc_mcp_katana.operations import set_parameter_value
 from dcc_mcp_katana.skill_support import invoke
 
 
 @skill_entry
 def main(**kwargs):
-    return invoke("Katana nodes listed.", list_nodes, **kwargs)
+    return invoke("Katana parameter updated.", set_parameter_value, **kwargs)
 
 
 if __name__ == "__main__":
