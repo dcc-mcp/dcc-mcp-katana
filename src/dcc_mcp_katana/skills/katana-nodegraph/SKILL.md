@@ -10,7 +10,7 @@ allowed-tools: Python
 metadata:
   dcc-mcp:
     dcc: katana
-    version: "0.3.0"  # x-release-please-version
+    version: "0.4.0"  # x-release-please-version
     layer: domain
     stage: scene
     search-hint: "katana node graph create connect parameter timeline save project"
