@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from pathlib import Path
 from typing import Optional
 
@@ -46,16 +47,28 @@ def start_server(port: Optional[int] = None) -> KatanaMcpServer:
     if _server is not None and _server.is_running:
         return _server
     _dispatcher.install()
-    _server = KatanaMcpServer(port)
-    _server.register_builtin_actions()
-    _server.start()
-    return _server
+    candidate = None
+    try:
+        candidate = KatanaMcpServer(port)
+        candidate.register_builtin_actions()
+        candidate.start()
+    except Exception:
+        if candidate is not None:
+            with suppress(Exception):
+                candidate.stop()
+        with suppress(Exception):
+            _dispatcher.uninstall()
+        raise
+    _server = candidate
+    return candidate
 
 
 def stop_server() -> None:
     """Stop the server and remove the native event handler."""
     global _server
-    if _server is not None:
-        _server.stop()
+    try:
+        if _server is not None:
+            _server.stop()
+    finally:
         _server = None
-    _dispatcher.uninstall()
+        _dispatcher.uninstall()

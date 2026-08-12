@@ -1,14 +1,14 @@
-"""Inspect the active Katana node graph."""
+"""Rename a Katana node."""
 
 from dcc_mcp_core.skill import skill_entry
 
-from dcc_mcp_katana.operations import inspect_nodegraph
+from dcc_mcp_katana.operations import rename_node
 from dcc_mcp_katana.skill_support import invoke
 
 
 @skill_entry
-def main(**_kwargs):
-    return invoke("Katana node graph inspected.", inspect_nodegraph)
+def main(**kwargs):
+    return invoke("Katana node renamed.", rename_node, **kwargs)
 
 
 if __name__ == "__main__":

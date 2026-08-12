@@ -1,5 +1,8 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from dcc_mcp_katana import __version__
 
@@ -18,8 +21,6 @@ def test_bundled_assets_exist():
 
 
 def test_start_server_defers_port_resolution_to_core(monkeypatch):
-    from types import SimpleNamespace
-
     from dcc_mcp_katana import server as server_module
 
     ports = []
@@ -47,3 +48,47 @@ def test_start_server_defers_port_resolution_to_core(monkeypatch):
     server_module.stop_server()
 
     assert ports == [0, None]
+
+
+def test_start_failure_rolls_back_dispatcher(monkeypatch):
+    from dcc_mcp_katana import server as server_module
+
+    events = []
+    monkeypatch.setattr(server_module, "_server", None)
+    monkeypatch.setattr(
+        server_module,
+        "_dispatcher",
+        SimpleNamespace(
+            install=lambda: events.append("install"),
+            uninstall=lambda: events.append("uninstall"),
+        ),
+    )
+
+    def fail_constructor(_port=None):
+        raise RuntimeError("constructor failed")
+
+    monkeypatch.setattr(server_module, "KatanaMcpServer", fail_constructor)
+    with pytest.raises(RuntimeError, match="constructor failed"):
+        server_module.start_server()
+    assert events == ["install", "uninstall"]
+    assert server_module._server is None
+
+
+def test_stop_failure_still_uninstalls_dispatcher(monkeypatch):
+    from dcc_mcp_katana import server as server_module
+
+    events = []
+
+    def fail_stop():
+        raise RuntimeError("stop failed")
+
+    monkeypatch.setattr(server_module, "_server", SimpleNamespace(stop=fail_stop))
+    monkeypatch.setattr(
+        server_module,
+        "_dispatcher",
+        SimpleNamespace(uninstall=lambda: events.append("uninstall")),
+    )
+    with pytest.raises(RuntimeError, match="stop failed"):
+        server_module.stop_server()
+    assert events == ["uninstall"]
+    assert server_module._server is None
