@@ -19,18 +19,22 @@ _Illustrative workflow generated with OpenAI ImageGen from the retained source i
 
 ## Install in Katana's Python environment
 
+See the canonical [Install and upgrade](install.md) runbook for supported versions, explicit
+host/Python overrides, status, verification, rollback, upgrade, and receipt-driven uninstall.
+
 ```bash
 python -m pip install dcc-mcp-katana
-dcc-mcp-katana resource-path
+dcc-mcp-katana install --dry-run --json
+dcc-mcp-katana install --yes --json
 ```
 
-Add the printed directory to `KATANA_RESOURCES`, preserving any existing
-entries. The separator is `;` on Windows and `:` on Linux/macOS. Start Katana,
-then check the installation:
+The installer writes an adapter-owned launcher that preserves the existing
+`KATANA_RESOURCES` entries; it does not modify shell profiles or registry keys. Run the
+machine-executable launcher returned in `next_steps`, then check the installation:
 
 ```bash
-dcc-mcp-katana doctor
-dcc-mcp-cli wait-ready --dcc-type katana
+dcc-mcp-katana doctor --json
+dcc-mcp-katana verify --json
 dcc-mcp-cli load-skill katana-nodegraph --dcc-type katana
 ```
 
