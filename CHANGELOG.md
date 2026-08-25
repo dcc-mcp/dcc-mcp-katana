@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.4.0...v0.5.0) (2026-08-25)
+
+
+### Features
+
+* adopt agent-first install lifecycle ([247ebd2](https://github.com/dcc-mcp/dcc-mcp-katana/commit/247ebd270a813edd7b3f44a34cdca7439cd4b073))
+
 ## [0.4.0](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.3.0...v0.4.0) (2026-08-12)
 
 
