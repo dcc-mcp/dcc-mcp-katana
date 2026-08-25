@@ -14,6 +14,7 @@ class FakeEventModule:
         self.auto_run = auto_run
         self.handler = None
         self.queued = []
+        self.queued_ready = threading.Event()
 
     def RegisterEventHandler(self, handler, eventType):
         assert eventType == dispatcher_module.KatanaDispatcher.event_type
@@ -26,11 +27,17 @@ class FakeEventModule:
 
     def QueueEvent(self, event_type, event_id, pending):
         self.queued.append((event_type, event_id, pending))
+        self.queued_ready.set()
         if self.auto_run:
             self.handler(event_type, event_id, pending=pending)
 
+    def wait_for_queued(self, *, timeout):
+        return self.queued_ready.wait(timeout)
+
     def run_next(self):
         event_type, event_id, pending = self.queued.pop(0)
+        if not self.queued:
+            self.queued_ready.clear()
         self.handler(event_type, event_id, pending=pending)
 
 
@@ -65,7 +72,8 @@ def test_dispatcher_installs_and_executes_queued_call(monkeypatch):
     assert events.handler is None
 
 
-def test_dispatcher_rejects_over_capacity_and_recovers_after_cancel(monkeypatch):
+@pytest.mark.parametrize("_iteration", range(10))
+def test_dispatcher_rejects_over_capacity_and_recovers_after_cancel(monkeypatch, _iteration):
     events = FakeEventModule(auto_run=False)
     install_fake_katana(monkeypatch, events)
     monkeypatch.setattr(dispatcher_module, "MIN_TIMEOUT_SECONDS", 0.02)
@@ -75,7 +83,7 @@ def test_dispatcher_rejects_over_capacity_and_recovers_after_cancel(monkeypatch)
     first_thread, first = run_in_thread(
         lambda: dispatcher.dispatch_callable(lambda: "late", timeout_hint_secs=0.02)
     )
-    assert threading.Event().wait(0.005) is False
+    assert events.wait_for_queued(timeout=1.0)
     second_thread, second = run_in_thread(lambda: dispatcher.dispatch_callable(lambda: "blocked"))
     second_thread.join(timeout=1)
     assert "queue is full" in str(second["error"])
@@ -84,6 +92,14 @@ def test_dispatcher_rejects_over_capacity_and_recovers_after_cancel(monkeypatch)
     assert "was cancelled" in str(first["error"])
     events.run_next()
     assert events.queued == []
+
+    recovered_thread, recovered = run_in_thread(
+        lambda: dispatcher.dispatch_callable(lambda: "recovered")
+    )
+    assert events.wait_for_queued(timeout=1.0)
+    events.run_next()
+    recovered_thread.join(timeout=1)
+    assert recovered == {"value": "recovered"}
 
 
 def test_dispatcher_marks_started_timeout_as_unknown(monkeypatch):
