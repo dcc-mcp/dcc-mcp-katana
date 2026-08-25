@@ -15,6 +15,8 @@ class FakeEventModule:
         self.handler = None
         self.queued = []
         self.queued_ready = threading.Event()
+        self.queue_return_allowed = threading.Event()
+        self.queue_return_allowed.set()
 
     def RegisterEventHandler(self, handler, eventType):
         assert eventType == dispatcher_module.KatanaDispatcher.event_type
@@ -28,11 +30,19 @@ class FakeEventModule:
     def QueueEvent(self, event_type, event_id, pending):
         self.queued.append((event_type, event_id, pending))
         self.queued_ready.set()
+        if not self.queue_return_allowed.wait(timeout=1.0):
+            raise AssertionError("fake QueueEvent return barrier timed out")
         if self.auto_run:
             self.handler(event_type, event_id, pending=pending)
 
     def wait_for_queued(self, *, timeout):
         return self.queued_ready.wait(timeout)
+
+    def hold_queue_return(self):
+        self.queue_return_allowed.clear()
+
+    def release_queue_return(self):
+        self.queue_return_allowed.set()
 
     def run_next(self):
         event_type, event_id, pending = self.queued.pop(0)
@@ -79,15 +89,18 @@ def test_dispatcher_rejects_over_capacity_and_recovers_after_cancel(monkeypatch,
     monkeypatch.setattr(dispatcher_module, "MIN_TIMEOUT_SECONDS", 0.02)
     dispatcher = dispatcher_module.KatanaDispatcher(max_pending=1)
     dispatcher.install()
+    events.hold_queue_return()
 
     first_thread, first = run_in_thread(
         lambda: dispatcher.dispatch_callable(lambda: "late", timeout_hint_secs=0.02)
     )
     assert events.wait_for_queued(timeout=1.0)
+    assert threading.Event().wait(0.05) is False
     second_thread, second = run_in_thread(lambda: dispatcher.dispatch_callable(lambda: "blocked"))
     second_thread.join(timeout=1)
     assert "queue is full" in str(second["error"])
 
+    events.release_queue_return()
     first_thread.join(timeout=1)
     assert "was cancelled" in str(first["error"])
     events.run_next()
