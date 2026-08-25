@@ -7,7 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from dcc_mcp_katana import cli, install_environment, install_lifecycle, plugin
+from dcc_mcp_katana import __version__, cli, install_environment, install_lifecycle, plugin
+
+_STALE_ADAPTER_VERSION = "0.3.0"
 
 
 def test_install_dry_run_preserves_existing_katana_resources(tmp_path, monkeypatch, capsys):
@@ -26,7 +28,7 @@ def test_install_dry_run_preserves_existing_katana_resources(tmp_path, monkeypat
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -76,7 +78,7 @@ def test_preflight_rejects_target_adapter_version_mismatch(tmp_path, monkeypatch
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.3.0",
+                    "dcc-mcp-katana": _STALE_ADAPTER_VERSION,
                 }
             )
         )
@@ -98,7 +100,7 @@ def test_preflight_rejects_target_adapter_version_mismatch(tmp_path, monkeypatch
 
     assert code == 10
     assert report["failure"]["stage"] == "adapter"
-    assert "0.3.0" in report["failure"]["reason"]
+    assert _STALE_ADAPTER_VERSION in report["failure"]["reason"]
     assert install_environment.receipt_path().exists() is False
 
 
@@ -118,7 +120,7 @@ def test_install_writes_owned_launcher_and_receipt_idempotently(tmp_path, monkey
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -185,7 +187,7 @@ def test_status_uses_receipt_without_launching_katana(tmp_path, monkeypatch, cap
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -235,7 +237,7 @@ def test_uninstall_consumes_receipt_without_host_preflight(tmp_path, monkeypatch
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -292,7 +294,7 @@ def test_upgrade_refreshes_stale_version_stamp(tmp_path, monkeypatch, capsys):
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -311,7 +313,7 @@ def test_upgrade_refreshes_stale_version_stamp(tmp_path, monkeypatch, capsys):
     installed = json.loads(capsys.readouterr().out)
     receipt = Path(installed["receipt_path"])
     receipt_payload = json.loads(receipt.read_text(encoding="utf-8"))
-    receipt_payload["adapter_version"] = "0.3.0"
+    receipt_payload["adapter_version"] = _STALE_ADAPTER_VERSION
     receipt.write_text(json.dumps(receipt_payload), encoding="utf-8")
 
     assert cli.main(["status", "--json"]) == 0
@@ -324,7 +326,7 @@ def test_upgrade_refreshes_stale_version_stamp(tmp_path, monkeypatch, capsys):
     refreshed = json.loads(receipt.read_text(encoding="utf-8"))
     assert report["status"] == "ok"
     assert report["verb"] == "upgrade"
-    assert refreshed["adapter_version"] == "0.4.0"
+    assert refreshed["adapter_version"] == __version__
 
 
 def test_verify_reaches_target_import_and_typed_readiness(tmp_path, monkeypatch, capsys):
@@ -336,13 +338,13 @@ def test_verify_reaches_target_import_and_typed_readiness(tmp_path, monkeypatch,
         if Path(command[0]) == host:
             payload = "Katana 8.0v1\n"
         elif "import dcc_mcp_katana" in command[-1]:
-            payload = json.dumps({"success": True, "version": "0.4.0"})
+            payload = json.dumps({"success": True, "version": __version__})
         else:
             payload = json.dumps(
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         return subprocess.CompletedProcess(command, 0, stdout=payload, stderr="")
@@ -417,7 +419,7 @@ def test_lifecycle_json_uses_core_install_sop_v1_required_surface(tmp_path, monk
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -487,7 +489,7 @@ def test_locked_launcher_returns_requires_restart_contract(tmp_path, monkeypatch
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
@@ -542,7 +544,7 @@ def test_failed_upgrade_restores_previous_launcher_and_receipt(tmp_path, monkeyp
                 {
                     "python_version": "3.12.10",
                     "dcc-mcp-core": "0.20.8",
-                    "dcc-mcp-katana": "0.4.0",
+                    "dcc-mcp-katana": __version__,
                 }
             )
         )
