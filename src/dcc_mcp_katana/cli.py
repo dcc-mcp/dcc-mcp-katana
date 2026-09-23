@@ -15,9 +15,9 @@ from .install_contract import (
     EXIT_REQUIRES_RESTART,
     EXIT_VERIFY,
     LIFECYCLE_VERBS,
-    SCHEMA_VERSION,
     InstallFailure,
     empty_verify,
+    report_schema_version,
     runtime_core_version,
 )
 from .install_environment import resource_entries, resource_path
@@ -139,7 +139,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     }
                 ]
             report = {
-                "schema_version": SCHEMA_VERSION,
+                "schema_version": report_schema_version(),
                 "status": (
                     "requires_restart" if exc.exit_code == EXIT_REQUIRES_RESTART else "failed"
                 ),

@@ -14,7 +14,7 @@ from typing import Any
 from .install_contract import (
     EXIT_INSTALL,
     EXIT_REQUIRES_RESTART,
-    SCHEMA_VERSION,
+    RECEIPT_SCHEMA_VERSION,
     InstallFailure,
 )
 
@@ -207,7 +207,7 @@ def install_launcher(report: dict[str, Any]) -> dict[str, object]:
     previous_mode = launcher.stat().st_mode if launcher.is_file() else 0o700
     launcher_payload = _launcher_payload(Path(report["dcc_path"]))
     receipt_payload = {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": RECEIPT_SCHEMA_VERSION,
         "dcc_type": "katana",
         "adapter_version": report["adapter_version"],
         "core_version": report["core_version"],

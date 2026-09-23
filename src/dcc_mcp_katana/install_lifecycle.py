@@ -10,9 +10,9 @@ from dcc_mcp_core.install_lifecycle import wait_for_sidecar_ready
 from .__version__ import __version__
 from .install_contract import (
     EXIT_PREFLIGHT,
-    SCHEMA_VERSION,
     InstallFailure,
     empty_verify,
+    report_schema_version,
     runtime_core_version,
 )
 from .install_environment import (
@@ -55,7 +55,7 @@ def plan(
     environment = resource_step()
     inspection = inspect_install(__version__)
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": report_schema_version(),
         "status": "planned",
         "dcc_type": "katana",
         "verb": verb,
@@ -86,7 +86,7 @@ def status_report() -> dict[str, Any]:
     if state == "upgrade":
         action = "upgrade"
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": report_schema_version(),
         "status": "ok",
         "dcc_type": "katana",
         "verb": "status",
@@ -130,7 +130,7 @@ def uninstall_report(dry_run: bool) -> dict[str, Any]:
         status = "ok"
         state = "fresh"
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": report_schema_version(),
         "status": status,
         "dcc_type": "katana",
         "verb": "uninstall",
@@ -187,7 +187,7 @@ def verify_report(python_value: Optional[Path], timeout: float) -> dict[str, Any
             else:
                 result["directly_usable"] = True
     return {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": report_schema_version(),
         "status": "ok" if result["directly_usable"] else "failed",
         "dcc_type": "katana",
         "verb": "verify",
