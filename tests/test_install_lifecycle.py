@@ -666,3 +666,25 @@ def test_ci_core_latest_job_resolves_a_real_core_version():
     script = resolve[0]["run"]
     assert "exit 1" in script, "empty version resolution must fail the job"
     assert "::error::" in script
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"properties": {"schema_version": "not-an-object"}},
+        {"properties": {"schema_version": {"const": "1"}}},
+        {"properties": {"schema_version": {"const": True}}},
+        {"properties": "not-an-object"},
+        {},
+    ],
+)
+def test_malformed_schema_document_degrades_to_the_fallback(monkeypatch, document):
+    """A wrong-shaped schema must degrade to the fallback, not raise.
+
+    Core at this adapter's floor loads the Install SOP schema with a bare ``json.loads`` -- no
+    type and no digest validation -- so valid JSON of the wrong shape is reachable. Every node
+    on the path to the const is therefore read inside the guarded block.
+    """
+    monkeypatch.setattr("dcc_mcp_katana.install_contract.load_install_sop_schema", lambda: document)
+
+    assert report_schema_version() == FALLBACK_REPORT_SCHEMA_VERSION
