@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.5.0...v0.5.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **install:** read the report schema version from Core's published document ([#12](https://github.com/dcc-mcp/dcc-mcp-katana/issues/12)) ([ae602e8](https://github.com/dcc-mcp/dcc-mcp-katana/commit/ae602e8c5cd9ea35c6873623a5365677def3df63))
+
 ## [0.5.0](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.4.0...v0.5.0) (2026-08-25)
 
 
