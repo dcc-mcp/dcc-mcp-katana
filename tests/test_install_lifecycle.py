@@ -8,6 +8,11 @@ from pathlib import Path
 import pytest
 
 from dcc_mcp_katana import __version__, cli, install_environment, install_lifecycle, plugin
+from dcc_mcp_katana.install_contract import (
+    FALLBACK_REPORT_SCHEMA_VERSION,
+    RECEIPT_SCHEMA_VERSION,
+    report_schema_version,
+)
 
 _STALE_ADAPTER_VERSION = "0.3.0"
 
@@ -51,7 +56,7 @@ def test_install_dry_run_preserves_existing_katana_resources(tmp_path, monkeypat
     report = json.loads(capsys.readouterr().out)
     environment = next(step for step in report["steps"] if step["id"] == "persist-katana-resources")
     assert code == 0
-    assert report["schema_version"] == 1
+    assert report["schema_version"] == report_schema_version()
     assert report["dcc_type"] == "katana"
     assert report["verb"] == "install"
     assert report["status"] == "planned"
@@ -459,7 +464,7 @@ def test_lifecycle_json_uses_core_install_sop_v1_required_surface(tmp_path, monk
     }
     for report in reports:
         assert required <= report.keys()
-        assert report["schema_version"] == 1
+        assert report["schema_version"] == report_schema_version()
         assert isinstance(report["schema_version"], int)
         assert report["status"] in {
             "planned",
@@ -574,3 +579,112 @@ def test_failed_upgrade_restores_previous_launcher_and_receipt(tmp_path, monkeyp
     assert receipt.read_bytes() == previous_receipt
     assert cli.main(["status", "--json"]) == 0
     assert json.loads(capsys.readouterr().out)["installation_state"] == "current"
+
+
+def test_report_schema_version_follows_the_published_document(monkeypatch):
+    """The report field is the ``const`` Core enforces, not a literal of ours."""
+    monkeypatch.setattr(
+        "dcc_mcp_katana.install_contract.load_install_sop_schema",
+        lambda: {"properties": {"schema_version": {"const": 7}}},
+    )
+
+    assert report_schema_version() == 7
+
+
+def test_report_schema_version_ignores_cores_artifact_revision():
+    """Core's exported constant is the artifact revision, not the report field.
+
+    Core 0.20.34 exports ``INSTALL_SOP_SCHEMA_VERSION = 2`` (the ``-v2`` artifact revision)
+    while the report field must stay at the document's ``const`` of 1, because v2 only adds an
+    optional ``catalog`` object. These are separate quantities that merely agreed while both
+    were 1, so the constant must never reach the report.
+    """
+    assert report_schema_version() == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        RuntimeError("Install SOP schema integrity error: schema_digest_mismatch"),
+        OSError("schema file unreadable"),
+        ValueError("schema document is not valid JSON"),
+    ],
+)
+def test_report_schema_version_survives_schema_read_failure(monkeypatch, error):
+    """An unhealthy Core must not stop the installer from emitting a report.
+
+    Core verifies its schema document with a SHA-256 digest and raises on a missing, tampered,
+    or unparsable document. Broken installs are exactly the situation this installer exists to
+    report on, so the read failure has to degrade to the fallback instead of propagating.
+    """
+    monkeypatch.setattr("dcc_mcp_katana.install_contract.load_install_sop_schema", _raise(error))
+
+    assert report_schema_version() == FALLBACK_REPORT_SCHEMA_VERSION
+
+
+def _raise(error: Exception):
+    def _raiser():
+        raise error
+
+    return _raiser
+
+
+def test_receipt_schema_version_is_a_separate_contract():
+    """The receipt is its own document, not the Install SOP report.
+
+    Both carry a ``schema_version`` that equals 1, which reads as a contradiction. They are
+    unrelated documents: the Install SOP report follows the artifact Core publishes, while the
+    receipt describes the installed launcher and owns its own revision.
+    """
+    assert RECEIPT_SCHEMA_VERSION == 1
+
+
+def test_core_dependency_stays_pinned_below_the_next_minor():
+    """``<1.0.0`` admits any future Core minor, which is how 0.20.34 shipped unannounced."""
+    import re
+
+    pyproject = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(encoding="utf-8")
+    core = re.search(r'"dcc-mcp-core>=[0-9.]+,<(?P<upper>[0-9.]+)"', pyproject)
+
+    assert core is not None
+    assert core.group("upper") == "0.21.0"
+
+
+def test_ci_core_latest_job_resolves_a_real_core_version():
+    """The early-warning job must fail loudly rather than test an empty pin."""
+    import yaml
+
+    workflow = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    job = workflow["jobs"]["core-latest"]
+    resolve = [step for step in job["steps"] if step.get("id") == "core"]
+    assert resolve, "core-latest job has no version resolution step"
+
+    script = resolve[0]["run"]
+    assert "exit 1" in script, "empty version resolution must fail the job"
+    assert "::error::" in script
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"properties": {"schema_version": "not-an-object"}},
+        {"properties": {"schema_version": {"const": "1"}}},
+        {"properties": {"schema_version": {"const": True}}},
+        {"properties": "not-an-object"},
+        {},
+    ],
+)
+def test_malformed_schema_document_degrades_to_the_fallback(monkeypatch, document):
+    """A wrong-shaped schema must degrade to the fallback, not raise.
+
+    Core at this adapter's floor loads the Install SOP schema with a bare ``json.loads`` -- no
+    type and no digest validation -- so valid JSON of the wrong shape is reachable. Every node
+    on the path to the const is therefore read inside the guarded block.
+    """
+    monkeypatch.setattr("dcc_mcp_katana.install_contract.load_install_sop_schema", lambda: document)
+
+    assert report_schema_version() == FALLBACK_REPORT_SCHEMA_VERSION
