@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.5.2...v0.5.3) (2026-11-15)
+
+
+### Documentation
+
+* refresh the generated DCC-MCP host matrix pointer ([bcde230](https://github.com/dcc-mcp/dcc-mcp-katana/commit/bcde2301a49a685181f8715746ca13274167ca55))
+* refresh the generated DCC-MCP host matrix pointer ([ac506e0](https://github.com/dcc-mcp/dcc-mcp-katana/commit/ac506e0f1346dbba5f1175ea09a72582e853cb8f))
+
 ## [0.5.2](https://github.com/dcc-mcp/dcc-mcp-katana/compare/v0.5.1...v0.5.2) (2026-10-17)
 
 
